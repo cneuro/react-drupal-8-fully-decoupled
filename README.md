@@ -1,12 +1,22 @@
-# Drupalize.Me React & Drupal 8 Code Examples
+# Drupal 8 with fully decoupled React demo app
 
-This repo contains the example code used in the https://drupalize.me/series/drupal-8-and-reactjs series.
+This code is **based on the Drupalize.Me [Get Started Using React and Drupal Together](https://drupalize.me/series/drupal-8-and-reactjs) series**, specifically a modified version of the repo at https://github.com/DrupalizeMe/react-and-drupal-examples.
 
-**Note:** The `hello-world` branch contains a trimmed down version of the code that reflects the application as it would be after completing this tutorial covering how to [Connect React to a Drupal Theme or Module](https://drupalize.me/tutorial/connect-react-drupal-theme-or-module?p=3253).
+The main changes are:
+- removed the partially decoupled React app originally found under `/react-and-drupal-examples/drupal/web/themes/react_example_theme`
+- full integration of [Material UI](https://material-ui.com/)
+- removed certain React components that demonstrated intermediate tutorial progress (`NodeListOnly` & `NodeReadWriteReducer`)
+- Added React HMR package [React Hot Loader](https://github.com/gaearon/react-hot-loader)
+- fixed React imports and installation for MacOS
+- fixed `auth` and `utils` code to better comply with Drupal configs
+- fixed and amended Drupal configs to work 'out of the box'
+- various new components, Ui tweaks & code linting
+
+The Drupal site config can be imported from the supplied gzipped archive. For details, refer to the import section on https://www.drupal.org/node/2416545.
 
 ## Drupal 8
 
-The /drupal directory contains a Drupal 8 project with basic configuration for JSON:API, and to demonstrate embedding a React application inside a Drupal theme or module.
+The `/drupal` directory contains a Drupal 8 project with basic configuration for JSON:API, and to demonstrate embedding a React application inside a Drupal theme or module.
 
 Install all the Drupal dependencies:
 
@@ -15,7 +25,7 @@ cd drupal
 composer install
 ```
 
-Then import the database snapshot in _drupal/backup.sql.gz_.
+Then import the database snapshot in `drupal/backup.sql.gz`.
 
 The default admin account is admin/admin. You can change this with `drush upwd admin {NEW_PASSWORD}`.
 
@@ -33,7 +43,7 @@ ddev import-db --src=./backup.sql.gz
 ddev exec "drush updb -y && drush cim -y && drush cr -y"
 ```
 
-The _/drupal/web/themes/react\_example\_theme/_ contains a custom theme with a React application embedded via the theme. This demonstrates using Webpack to bundle and transpile React/JavaScript files.
+The `/drupal/web/themes/react\_example\_theme/` contains a custom theme with a React application embedded via the theme. This demonstrates using Webpack to bundle and transpile React/JavaScript files.
 
 ```bash
 cd /drupal/web/themes/react_example_theme;
@@ -51,7 +61,7 @@ npm run start:hmr
 
 ## Decoupled React Application
 
-The _/react-decoupled_ directory contains an example decoupled React application built with create-react-app. It is built to interact with the API provided by Drupal 8 installed in _/drupal_.
+The `/react-decoupled` directory contains an example decoupled React application built with create-react-app. It is built to interact with the API provided by Drupal 8 installed in `/drupal`.
 
 To download dependencies and start the local development server run:
 

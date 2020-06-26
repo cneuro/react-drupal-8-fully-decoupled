@@ -15,6 +15,7 @@ export const fetchWithCSRFToken = (csrfUrl, fetchUrl, fetchOptions) => {
     return fetch(csrfUrl)
       .then(response => response.text())
       .then((csrfToken) => {
+        console.log('Success: CSRF token', csrfToken);
         fetchOptions.headers.append('X-CSRF-Token', csrfToken);
         return fetch(fetchUrl, fetchOptions);
       });

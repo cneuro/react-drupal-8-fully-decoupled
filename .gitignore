@@ -1,6 +1,9 @@
 # Editor config
 .idea
 
+# MacOS
+.DS_Store
+
 # Oauth keys
 /drupal/keys/private.key
 /drupal/keys/public.key

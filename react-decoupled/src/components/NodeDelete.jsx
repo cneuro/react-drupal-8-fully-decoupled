@@ -1,4 +1,6 @@
 import React from "react";
+import Button from '@material-ui/core/Button';
+
 import { getAuthClient } from '../utils/auth';
 
 const auth = getAuthClient();
@@ -29,7 +31,7 @@ const NodeDelete = ({ id, title, onSuccess }) => {
           }
         });
     } catch (error) {
-      console.log('API error', error);
+      console.error('Error: API failure', error);
     }
 
     if (typeof onSuccess === 'function') {
@@ -38,9 +40,9 @@ const NodeDelete = ({ id, title, onSuccess }) => {
   }
 
   return (
-    <button onClick={event => doConfirm() && doDelete()}>
-      delete
-    </button>
+    <Button onClick={event => doConfirm() && doDelete()}>
+      Delete
+    </Button>
   );
 };
 

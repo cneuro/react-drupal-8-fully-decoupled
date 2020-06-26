@@ -20,15 +20,13 @@ const refreshPromises = [];
 export function getAuthClient(config = {}) {
   const defaultConfig = {
     // Base URL of your Drupal site.
-    base: 'https://react-tutorials-2.ddev.site',
+    base: 'http://react-tutorials-2.ddev.site',
     // Name to use when storing the token in localStorage.
     token_name: 'drupal-oauth-token',
     // OAuth client ID - get from Drupal.
     client_id: 'cb0379f2-7c9f-48bb-8973-f0f11b6064d5',
     // OAuth client secret - set in Drupal.
-    client_secret: 'app',
-    // Drupal user role related to this OAuth client.
-    scope: 'oauth',
+    client_secret: 'secret',
     // Margin of time before the current token expires that we should force a
     // token refresh.
     expire_margin: 0,
@@ -39,17 +37,18 @@ export function getAuthClient(config = {}) {
   /**
    * Exchange a username & password for an OAuth token.
    *
-   * @param {string} username 
-   * @param {string} password 
+   * @param {string} username
+   * @param {string} password
    */
   async function login(username, password) {
     let formData = new FormData();
+
     formData.append('grant_type', 'password');
     formData.append('client_id', config.client_id);
     formData.append('client_secret', config.client_secret);
-    formData.append('scope', config.scope);
     formData.append('username', username);
     formData.append('password', password);
+
     try {
       const response = await fetch(`${config.base}/oauth/token`, {
         method: 'post',
@@ -59,14 +58,16 @@ export function getAuthClient(config = {}) {
         body: formData,
       });
       const data = await response.json();
+
       if (data.error) {
-        console.log('Error retrieving token', data);
-        return false;
+        console.error('Error: token retrieval failed', data);
+        return Promise.reject();
       }
       return saveToken(data);
     }
     catch (err) {
-      return console.log('API got an error', err);
+      console.error('Error: API failed', err);
+      return Promise.reject();
     }
   };
 
@@ -77,7 +78,7 @@ export function getAuthClient(config = {}) {
     localStorage.removeItem(config.token_name);
     return Promise.resolve(true);
   };
-  
+
   /**
    * Wrapper for fetch() that will attempt to add a Bearer token if present.
    *
@@ -91,8 +92,9 @@ export function getAuthClient(config = {}) {
   async function fetchWithAuthentication(url, options) {
     if (!options.headers.get('Authorization')) {
       const oauth_token = await token();
+
       if (oauth_token) {
-        console.log('using token', oauth_token);
+        console.log('Success: using existing token.');
         options.headers.append('Authorization', `Bearer ${oauth_token.access_token}`);
       }
       return fetch(`${config.base}${url}`, options);
@@ -114,7 +116,8 @@ export function getAuthClient(config = {}) {
       : false;
 
     if (!token) {
-      Promise.reject();
+      console.log('No token stored.');
+      return false;
     }
 
     const { expires_at, refresh_token } = token;
@@ -132,7 +135,7 @@ export function getAuthClient(config = {}) {
    * wether a previous request is still processing.
    */
   function refreshToken(refresh_token) {
-    console.log("getting refresh token");
+    console.log('Getting refresh token ...');
     if (refreshPromises[refresh_token]) {
       return refreshPromises[refresh_token];
     }
@@ -160,14 +163,14 @@ export function getAuthClient(config = {}) {
         delete refreshPromises[refresh_token];
 
         if (data.error) {
-          console.log('Error refreshing token', data);
+          console.error('Error: Token can`t be refreshed', data);
           return false;
         }
         return saveToken(data);
       })
       .catch(err => {
         delete refreshPromises[refresh_token];
-        console.log('API got an error', err)
+        console.error('Error: API failure', err)
         return Promise.reject(err);
       })
     );
@@ -176,7 +179,7 @@ export function getAuthClient(config = {}) {
   /**
    * Store an OAuth token retrieved from Drupal in localStorage.
    *
-   * @param {object} data 
+   * @param {object} data
    * @returns {object}
    *   Returns the token with an additional expires_at property added.
    */
@@ -198,7 +201,7 @@ export function getAuthClient(config = {}) {
     if (oauth_token) {
       return Promise.resolve(true);
     }
-    return Promise.reject(false);;
+    return Promise.reject(false);
   };
 
   /**

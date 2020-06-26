@@ -1,4 +1,11 @@
 import React, {useState} from "react";
+
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+
 import { getAuthClient } from '../utils/auth';
 
 const auth = getAuthClient();
@@ -30,13 +37,13 @@ const NodeForm = ({id, title, body, onSuccess}) => {
     const fetchUrl = id ? `/jsonapi/node/article/${id}` : `/jsonapi/node/article`;
 
     let data = {
-      "data": {
-        "type": "node--article",
-        "attributes": {
-          "title": `${values.title}`,
-          "body": {
-            "value": `${values.body}`,
-            "format": 'plain_text',
+      data: {
+        type: 'node--article',
+        attributes: {
+          title: `${values.title}`,
+          body: {
+            value: `${values.body}`,
+            format: 'plain_text',
           }
         }
       }
@@ -60,85 +67,89 @@ const NodeForm = ({id, title, body, onSuccess}) => {
       body: JSON.stringify(data),
     };
 
-    try {
-      auth.fetchWithAuthentication(fetchUrl, fetchOptions)
-        .then((response) => response.json())
-        .then((data) => {
-          // We're done processing.
-          setSubmitting(false);
+    auth.fetchWithAuthentication(fetchUrl, fetchOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        // We're done processing.
+        setSubmitting(false);
 
-          // If there are any errors display the error and return early.
-          if (data.errors && data.errors.length > 0) {
-            setResult({
-              success: false,
-              error: true,
-              message: <div className="messages messages--error">{data.errors[0].title}: {data.errors[0].detail}</div>,
-            });
-            return false;
+        // If there are any errors display the error and return early.
+        if (data.errors && data.errors.length > 0) {
+          setResult({
+            success: false,
+            error: true,
+            message: <div className="messages messages--error">{data.errors[0].title}: {data.errors[0].detail}</div>,
+          });
+          return false;
+        }
+
+        // If the request was successful, remove existing form values and
+        // display a success message.
+        setValues(defaultValues);
+        if (data.data.id) {
+          setResult({
+            success: true,
+            message: <div className="messages messages--status">{(id ? 'Updated' : 'Added')}: <em>{data.data.attributes.title}</em></div>,
+          });
+
+          if (typeof onSuccess === 'function') {
+            onSuccess(data.data);
           }
-
-          // If the request was successful, remove existing form values and
-          // display a success message.
-          setValues(defaultValues);
-          if (data.data.id) {
-            setResult({
-              success: true,
-              message: <div className="messages messages--status">{(id ? 'Updated' : 'Added')}: <em>{data.data.attributes.title}</em></div>,
-            });
-
-            if (typeof onSuccess === 'function') {
-              onSuccess(data.data);
-            }
-          }
+        }
+      })
+      .catch(error => {
+        setSubmitting(false);
+        setResult({
+          success: false,
+          error: true,
+          message: <div className="messages messages--error">{error}</div>,
         });
-    } catch (error) {
-      console.log('Error while contacting API', error);
-      setSubmitting(false);
-    }
+      });
   };
 
-  // If the form is currently being processed display a spinner.
-  if (isSubmitting) {
-    return (
-      <div>
-        Processing ...
-      </div>
-    )
-  }
-
   return (
-    <div>
-      {(result.success || result.error) &&
-        <div>
-          <h2>{(result.success ? 'Success!' : 'Error')}:</h2>
-          {result.message}
-        </div>
-      }
-      <form onSubmit={handleSubmit}>
-        <input
-          name="title"
-          type="text"
-          value={values.title}
-          placeholder="Title"
-          onChange={handleInputChange}
-        />
-        <br/>
-        <textarea
-          name="body"
-          rows="4"
-          cols="30"
-          value={values.body}
-          placeholder="Body"
-          onChange={handleInputChange}
-        />
-        <br/>
-        <input
-          name="submit"
-          type="submit"
-          value={id ? 'Edit existing node' : 'Add new node'}
-        />
-      </form>
-    </div>
+    <Paper elevation={0} variant="outlined">
+      <Box p={4}>
+        {(result.success || result.error) &&
+          <Typography variant="h6">
+            {result.message}
+          </Typography>
+        }
+
+        {isSubmitting && (
+          <Typography variant="h6">
+            Processing ...
+          </Typography>
+        )}
+
+        {!isSubmitting && (
+          <form onSubmit={handleSubmit}>
+            <TextField
+              name="title"
+              label="Title"
+              onChange={handleInputChange}
+            />
+
+            <TextField
+              name="body"
+              label="Body"
+              rows="4"
+              multiline
+              onChange={handleInputChange}
+            />
+
+            <Button
+              variant="contained"
+              color="primary"
+              name="submit"
+              type="submit"
+            >
+              {id ? 'Edit existing node' : 'Add new node'}
+            </Button>
+          </form>
+        )}
+      </Box>
+    </Paper>
   )
 };
 

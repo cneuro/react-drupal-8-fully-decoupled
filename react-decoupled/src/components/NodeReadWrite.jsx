@@ -1,8 +1,15 @@
-import React, { useEffect, useState } from "react";
-import NodeAdd from "./NodeAdd";
-import NodeEdit from "./NodeEdit";
-import NodeDelete from "./NodeDelete";
-import { getAuthClient } from "../utils/auth";
+import React, { useEffect, useState } from 'react';
+
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+
+import AdminOptions from './AdminOptions';
+import NodeAdd from './NodeAdd';
+import NodeLink from './NodeLink';
+import { getAuthClient } from '../utils/auth';
 
 const auth = getAuthClient();
 
@@ -48,6 +55,7 @@ const NodeItem = ({id, drupal_internal__nid, title, body, contentList, updateCon
   function onEditSuccess(data) {
     // Replace the edited item in the list with updated values.
     const idx = contentList.findIndex(item => item.id === data.id);
+
     console.log('index', {idx, data, content: contentList});
     contentList[idx] = data;
     updateContent([...contentList]);
@@ -56,44 +64,31 @@ const NodeItem = ({id, drupal_internal__nid, title, body, contentList, updateCon
   function onDeleteSuccess(id) {
     // Remove the deleted item from the list.
     const list = contentList.filter(item => item.id !== id);
+
     updateContent([...list]);
   }
 
   // Show the item with admin options.
   if (showAdminOptions) {
     return (
-      <div>
-        <hr/>
-        Admin options for {title}
-        <NodeEdit
-          id={id}
-          title={title}
-          body={body.value}
-          onSuccess={onEditSuccess}
-        />
-        <hr/>
-        <button onClick={handleClick}>
-          cancel
-        </button>
-        <NodeDelete
-          id={id}
-          title={title}
-          onSuccess={onDeleteSuccess}
-        />
-        <hr/>
-      </div>
+      <AdminOptions
+        title={title}
+        id={id}
+        body={body.value}
+        onEditSuccess={onEditSuccess}
+        handleCancel={handleClick}
+        onDeleteSuccess={onDeleteSuccess}
+      />
     );
   }
 
   // Show just the item.
   return (
-    <div>
-      <a href={`/node/${drupal_internal__nid}`}>{title}</a>
-      {" -- "}
-      <button onClick={handleClick}>
-        edit
-      </button>
-    </div>
+    <NodeLink
+      title={title}
+      nodeId={drupal_internal__nid}
+      onEdit={handleClick}
+    />
   );
 };
 
@@ -101,7 +96,9 @@ const NodeItem = ({id, drupal_internal__nid, title, body, contentList, updateCon
  * Component to render when there are no articles to display.
  */
 const NoData = () => (
-  <div>No articles found.</div>
+  <Typography variant="h5">
+    No articles found.
+  </Typography>
 );
 
 /**
@@ -135,7 +132,7 @@ const NodeReadWrite = () => {
           updateContent(data.data);
         }
       })
-      .catch(err => console.log('There was an error accessing the API', err));
+      .catch(err => console.error('Error: Cannot access the API', err));
     }, []);
 
   // Handle updates to state when a node is added.
@@ -151,21 +148,19 @@ const NodeReadWrite = () => {
   }
 
   return (
-    <div>
-      <h2>Site content</h2>
-      {content.length ? (
-        <>
-          <label htmlFor="filter">Type to filter:</label>{" "}
-          <input
-            type="text"
-            name="filter"
-            placeholder="Start typing ..."
-            onChange={(event => setFilter(event.target.value.toLowerCase()))}
-          />
-          <hr/>
-          {
-            // If there's a `filter` apply it to the list of nodes.
-            content.filter((item) => {
+    <Paper elevation={0} variant="outlined">
+      <Box p={4}>
+        <Typography variant="h4">Site content</Typography>
+
+        {content.length ? (
+          <Box mt={2}>
+            <TextField
+              label="Type to filter"
+              name="filter"
+              onChange={(event => setFilter(event.target.value.toLowerCase()))}
+            />
+
+            {content.filter((item) => {
               if (filter) {
                 const title = item.attributes.title ? item.attributes.title.toLowerCase() : '';
                 const body = item.attributes.body ? item.attributes.body.value.toLowerCase() : '';
@@ -181,28 +176,30 @@ const NodeReadWrite = () => {
                 contentList={content}
                 {...item.attributes}
               />
-            ))
-          }
-        </>
-      ) : (
-        <NoData />
-      )}
-      <hr />
-      {showNodeAdd ? (
-        <>
-          <h3>Add a new article</h3>
-          <NodeAdd
-            onSuccess={onNodeAddSuccess}
-          />
-        </>
-      ) : (
-        <p>
-          Don't see what you're looking for?
-          {" "}
-          <button onClick={() => setShowNodeAdd(true)}>Add a node</button>
-        </p>
-      )}
-    </div>
+            ))}
+          </Box>
+        ) : (
+          <NoData />
+        )}
+
+        {showNodeAdd ? (
+          <Box>
+            <Typography variant="h5">
+              Add a new article
+            </Typography>
+
+            <NodeAdd onSuccess={onNodeAddSuccess} />
+          </Box>
+        ) : (
+          <Button
+            color="primary"
+            onClick={() => setShowNodeAdd(true)}
+          >
+            Add a node
+          </Button>
+        )}
+      </Box>
+    </Paper>
   );
 };
 
